@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart'; // Importa el paquete principal de Flutter.
+import 'package:mi_app/interfaces/OrdenCompraModel.dart';
 import 'package:mi_app/services/orden_compra_service.dart'; // Importa el servicio para obtener órdenes de compra.
 import 'package:mi_app/views/ordenes/orden_compra_detail_page.dart'; // Importa la página de detalle de orden de compra.
 
@@ -10,7 +11,7 @@ class OrdenCompraListPage extends StatefulWidget {
 
 class _OrdenCompraListPageState extends State<OrdenCompraListPage> {
   // Estado de la página de lista.
-  List ordenes = []; // Lista de órdenes de compra.
+  List<OrdenCompraModel> ordenes = []; // Lista de órdenes de compra tipada.
   bool isLoading = true; // Indica si se están cargando los datos.
   String? errorMessage; // Mensaje de error si ocurre alguno.
   String query = ''; // Texto de búsqueda.
@@ -38,11 +39,18 @@ class _OrdenCompraListPageState extends State<OrdenCompraListPage> {
     ); // Llama al servicio para obtener órdenes.
 
     if (result['success']) {
-      // Si la respuesta es exitosa...
       setState(() {
-        ordenes = result['items']['data'] ?? []; // Asigna la lista de órdenes.
-        isLoading = false; // Oculta indicador de carga.
+        ordenes = List<OrdenCompraModel>.from(
+          result['items'],
+        ); // Tipado correcto
+        isLoading = false;
       });
+      // Imprime los datos de cada orden en consola
+      for (var orden in ordenes) {
+        print(
+          orden,
+        ); // Asegúrate de tener implementado toString() en OrdenCompraModel
+      }
     } else {
       // Si ocurre un error...
       setState(() {
@@ -169,52 +177,36 @@ class _OrdenCompraListPageState extends State<OrdenCompraListPage> {
     // Widget para mostrar la lista de órdenes.
     itemCount: ordenes.length, // Número de elementos en la lista.
     itemBuilder: (context, index) {
-      final orden = ordenes[index]; // Obtiene la orden actual.
+      final orden = ordenes[index];
       return Card(
-        elevation: 2, // Sombra de la tarjeta.
-        margin: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ), // Espaciado de la tarjeta.
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 12,
           ),
           title: Text(
-            'OC ${orden['orden_compra_ref'] ?? '---'}', // Muestra la referencia de la orden.
+            'OC ${orden.ordenCompraRef}',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 4),
-              Text(
-                'Proveedor: ${orden['proveedor']?['nombre'] ?? '---'}',
-              ), // Nombre del proveedor.
-              Text(
-                'Entrega: ${orden['fecha_promesa_entrega'] ?? '-'}',
-              ), // Fecha de entrega.
-              Text(
-                'Factura: ${orden['factura'] ?? 'Sin registrar'}',
-              ), // Factura asociada.
-              Text(
-                'Total: ${orden['importe_total'] ?? '0.00'} ${orden['moneda'] ?? ''}', // Importe total y moneda.
-              ),
-              Text(
-                'Estado: ${orden['status'] ?? 'Sin estado'}',
-              ), // Estado de la orden.
+              Text('Proveedor: ${orden.proveedor.nombreRazonSocial}'),
+              Text('Entrega: ${orden.fechaPromesaEntrega ?? '-'}'),
+              Text('Factura: ${orden.factura ?? 'Sin registrar'}'),
+              Text('Total: ${orden.importeTotal} ${orden.moneda}'),
+              Text('Estado: ${orden.status ?? 'Sin estado'}'),
             ],
           ),
-          trailing: Icon(Icons.chevron_right), // Icono de flecha al final.
+          trailing: Icon(Icons.chevron_right),
           onTap: () {
-            // Acción al tocar la tarjeta.
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => OrdenCompraDetailPage(
-                  ordenId: orden['id'],
-                ), // Navega a la página de detalle.
+                builder: (_) => OrdenCompraDetailPage(ordenId: orden.id),
               ),
             );
           },

@@ -1,6 +1,7 @@
 import 'dart:convert'; // Importa librería para convertir datos entre JSON y objetos Dart.
 import 'package:http/http.dart'
     as http; // Importa la librería http para hacer peticiones web.
+import 'package:mi_app/interfaces/OrdenCompraModel.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Permite guardar y recuperar datos localmente.
 
 class OrdenCompraService {
@@ -17,47 +18,38 @@ class OrdenCompraService {
   }
 
   Future<Map<String, dynamic>> fetchOrdenesCompra({String query = ''}) async {
-    // Método para obtener lista de órdenes, opcionalmente filtradas por query.
-    final token = await _getToken(); // Obtiene el token de autenticación.
-    final url = Uri.parse(
-      '$_baseUrl/ordenes_compra?query=$query',
-    ); // Construye la URL con el parámetro de búsqueda.
+    final token = await _getToken();
+    final url = Uri.parse('$_baseUrl/ordenes_compra?query=$query');
 
     try {
       final response = await http.get(
-        // Realiza una petición GET a la API.
         url,
         headers: {
-          'Accept': 'application/json', // Solicita respuesta en formato JSON.
-          'Authorization': 'Bearer $token', // Envía el token en la cabecera.
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
-      final data = jsonDecode(response.body); // Decodifica la respuesta JSON.
-
-      // 🔥 Imprime toda la respuesta para debugging
-      print(
-        '🟡 Respuesta completa de la API ordenes: ${jsonEncode(data)}',
-      ); // Imprime la respuesta para depuración.
+      final data = jsonDecode(response.body);
+      print('🟡 Respuesta completa de la API ordenes: ${jsonEncode(data)}');
 
       if (response.statusCode == 200 && data['status'] == true) {
-        // Si la respuesta es exitosa y el status es true...
+        final List<dynamic> rawList = data['items']['data'] ?? [];
+
+        final ordenes = rawList
+            .map((item) => OrdenCompraModel.fromJson(item))
+            .toList();
+
         return {
           'success': true,
-          'items': data['items'],
-        }; // Retorna éxito y la lista de órdenes.
+          'items': ordenes, // ✅ ahora es una lista de objetos OrdenCompraModel
+        };
       } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Error',
-        }; // Retorna error y mensaje.
+        return {'success': false, 'message': data['message'] ?? 'Error'};
       }
     } catch (e) {
-      print('🔴 Error al obtener órdenes: $e'); // Imprime el error en consola.
-      return {
-        'success': false,
-        'message': e.toString(),
-      }; // Retorna error y mensaje de excepción.
+      print('🔴 Error al obtener órdenes: $e');
+      return {'success': false, 'message': e.toString()};
     }
   }
 
