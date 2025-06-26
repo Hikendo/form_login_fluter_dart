@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mi_app/services/auth_service.dart';
 import 'package:mi_app/views/ordenes/orden_compra_list_page.dart'; // ajusta según tu estructura
 
+// Widget de formulario de login
 class FormLogin extends StatefulWidget {
   const FormLogin({Key? key}) : super(key: key);
 
@@ -10,25 +11,34 @@ class FormLogin extends StatefulWidget {
 }
 
 class _FormLoginState extends State<FormLogin> {
+  // Clave global para el formulario
   final _formKey = GlobalKey<FormState>();
+  // Controladores para los campos de texto
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // Estado para mostrar/ocultar contraseña
   bool _obscurePassword = true;
+  // Estado para mostrar indicador de carga
   bool _isLoading = false;
 
+  // Instancia del servicio de autenticación
   final AuthService _authService = AuthService();
 
   @override
   void dispose() {
+    // Liberar recursos de los controladores
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  // Función para manejar el envío del formulario
   Future<void> _submit() async {
+    // Validar el formulario
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
 
+      // Llamar al servicio de login
       final result = await _authService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
@@ -37,7 +47,7 @@ class _FormLoginState extends State<FormLogin> {
       setState(() => _isLoading = false);
 
       if (result['success']) {
-        // Mostrar snackbar (opcional)
+        // Mostrar snackbar de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Inicio de sesión exitoso')),
         );
@@ -64,7 +74,7 @@ class _FormLoginState extends State<FormLogin> {
           ),
         );
 
-        // Esperar 1 segundo y redirigir
+        // Esperar 1 segundo y redirigir a la página de órdenes
         await Future.delayed(const Duration(seconds: 1));
         Navigator.of(context).pop(); // Cerrar el diálogo
         Navigator.pushReplacement(
@@ -72,6 +82,7 @@ class _FormLoginState extends State<FormLogin> {
           MaterialPageRoute(builder: (_) => OrdenCompraListPage()),
         );
       } else {
+        // Mostrar snackbar con mensaje de error
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(result['message'])));
@@ -86,6 +97,7 @@ class _FormLoginState extends State<FormLogin> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Campo de correo electrónico
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(
@@ -104,6 +116,7 @@ class _FormLoginState extends State<FormLogin> {
             },
           ),
           const SizedBox(height: 16),
+          // Campo de contraseña
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
@@ -132,6 +145,7 @@ class _FormLoginState extends State<FormLogin> {
             },
           ),
           const SizedBox(height: 24),
+          // Botón para iniciar sesión
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
